@@ -14,6 +14,42 @@ import "strconv"
 // and reply for an RPC.
 //
 
+type TaskType int
+
+const (
+	TASK_MAP    TaskType = 0
+	TASK_REDUCE TaskType = 1
+)
+
+type TaskStatus int
+
+const (
+	TASK_STATUS_IN_PROGRESS TaskStatus = 0 // 10 sec, go routine, heart beat checking
+	TASK_STATUS_COMPLETE    TaskStatus = 1
+	TASK_STATUS_FAIL        TaskStatus = 2
+)
+
+type Task struct {
+	TaskName          string
+	TaskType          TaskType
+	AllocatedFileName string
+	OutputFileName    string
+}
+
+type RequestTaskArgs struct{}
+
+type RequestTaskReply struct {
+	Task Task
+}
+
+type UpdateTaskStatusArgs struct {
+	Task       Task
+	TaskStatus TaskStatus
+}
+
+type UpdateTaskStatusReply struct{}
+
+// sample
 type ExampleArgs struct {
 	X int
 }
@@ -23,7 +59,6 @@ type ExampleReply struct {
 }
 
 // Add your RPC definitions here.
-
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the master.
