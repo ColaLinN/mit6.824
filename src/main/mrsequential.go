@@ -79,7 +79,7 @@ func main() {
 		}
 		output := reducef(intermediateKVArray[i].Key, values)
 
-		// this is the correct format for each line of Reduce output.
+		// TODO this is the correct format for each line of Reduce output.
 		fmt.Fprintf(outputFile, "%v %v\n", intermediateKVArray[i].Key, output)
 
 		i = j

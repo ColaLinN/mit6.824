@@ -7,6 +7,7 @@ import "net/rpc"
 import "net/http"
 
 type MasterInterface interface {
+	// TODO 
 	RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error
 	UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskStatusReply) error
 	Example(args *ExampleArgs, reply *ExampleReply) error
@@ -17,16 +18,19 @@ type Master struct {
 	MapTaskList      []Task
 	ReduceTaskList   []Task
 	CompleteTaskList []Task
+	// TODO 
 	// Your definitions here.
 }
 
 // Your code here -- RPC handlers for the worker to call.
 
 func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
+	// TODO 
 	return nil
 }
 
 func (m *Master) UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskStatusReply) error {
+	// TODO 
 	return nil
 }
 
@@ -55,11 +59,11 @@ func (m *Master) server() {
 // main/mrmaster.go calls Done() periodically to find out
 // if the entire job has finished.
 func (m *Master) Done() bool {
-	// atom read?
+	// TODO key point atom read?
 	if m.TotalTaskStatus == TASK_STATUS_COMPLETE {
 		return true
 	}
-	// Your code here.
+	// TODO Your code here.
 	return false
 }
 
@@ -72,9 +76,16 @@ func MakeMaster(files []string, nReduce int) *Master {
 	}
 
 	// Your code here.
-	// go routine
-	// dispatchTask
+	// TODO go routine
+	// TODO dispatchTask
 
 	m.server()
 	return &m
 }
+
+// server start
+// worker request task
+// ... woker and server will take tens of sec to complete the task
+// worker and server keep the heartbeat check every 10 sec ===> process>10 sec? update the xxx
+// worker reply the task status, master confirm
+// 

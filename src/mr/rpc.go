@@ -17,8 +17,9 @@ import "strconv"
 type TaskType int
 
 const (
-	TASK_MAP    TaskType = 0
-	TASK_REDUCE TaskType = 1
+	TASK_EXIT   TaskType = 0 // either return this while all the tasks done, or can say the task is done while fail to contact master
+	TASK_MAP    TaskType = 1
+	TASK_REDUCE TaskType = 2
 )
 
 type TaskStatus int

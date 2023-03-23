@@ -32,6 +32,7 @@ func Worker(mapf func(string, string) []KeyValue,
 	reducef func(string, []string) string) {
 
 	// Your worker implementation here.
+	// TODO 
 
 	// uncomment to send the Example RPC to the master.
 	CallExample()
@@ -39,11 +40,21 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 
 func RequestTask() {
-
+	// TODO 
+	Map()
+	Reduce()
 }
 
 func UpdateTaskStatus() {
+	// TODO 
+}
 
+func Map() {
+	// TODO 
+}
+
+func Reduce() {
+	// TODO 
 }
 
 //
