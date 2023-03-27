@@ -33,9 +33,15 @@ const (
 	TASK_STATUS_FAIL
 )
 
+// Map functions return a slice of KeyValue.
+type KeyValue struct {
+	Key   string
+	Value string
+}
+
 type WorkerTask struct {
-	TaskID   int
-	TaskType TaskType
+	TaskID            int
+	TaskType          TaskType
 	AllocatedFileName []string
 }
 
@@ -53,6 +59,8 @@ type MasterTaskList struct {
 }
 
 type MasterStatus struct {
-	TaskStatus TaskStatus
-	mu         sync.Mutex
+	CompletedMapTaskNumber    int
+	CompletedReduceTaskNumber int
+	TaskStatus                TaskStatus
+	mu                        sync.Mutex
 }

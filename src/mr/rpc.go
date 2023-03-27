@@ -27,7 +27,7 @@ type RequestTaskArgs struct{}
 
 type RequestTaskReply struct {
 	Task    WorkerTask
-	nReduce int
+	NReduce int
 }
 
 type UpdateTaskStatusArgs struct {
@@ -37,7 +37,7 @@ type UpdateTaskStatusArgs struct {
 }
 
 type UpdateTaskStatusReply struct {
-	msg string
+	Msg string
 }
 
 // Cook up a unique-ish UNIX-domain socket name

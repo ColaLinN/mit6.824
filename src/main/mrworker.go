@@ -21,11 +21,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: mrworker xxx.so\n")
 		os.Exit(1)
 	}
-	
-	// TODO 
-	// mapf, reducef := loadPlugin(os.Args[1])
 
-	mr.Worker(nil, nil)
+	// TODO 
+	mapf, reducef := loadPlugin(os.Args[1])
+
+	mr.Worker(mapf, reducef)
 }
 
 //

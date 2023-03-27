@@ -2,20 +2,44 @@
 
 # assignment 1
 
+Commands
+
 ```
 export GO111MODULE="off"
-
-$ cd ~/6.824
-$ cd src/main
-$ go build -buildmode=plugin ../mrapps/wc.go
-$ rm mr-out*
-$ go run mrsequential.go wc.so pg*.txt
-$ more mr-out-0
+cd ~/6.824
+cd src/main
+go build -buildmode=plugin ../mrapps/wc.go
+rm mr-out*
+go run mrsequential.go wc.so pg*.txt
+more mr-out-0
 A 509
 ABOUT 2
 ACT 8
 ...
 
+```
+run task
+
+```
+rm mr-out-*
+go run mrmaster.go pg-*.txt
+go run mrworker.go wc.so
+
+go build -buildmode=plugin ../mrapps/wc.go && go run mrmaster.go pg-*.txt
+```
+
+the result should match this
+```
+cat mr-out-* | sort | more
+```
+
+test script
+1. check the output
+2. check master and workers run in parrallel
+3. recovers from workers that crashed while running task
+4. expects to see output in files named mr-out-X, one for each reduce task. 
+```
+sh ./test-mr.sh
 ```
 
 file under /src/main/
@@ -102,28 +126,6 @@ CHANGE: You should put your implementation in
    Root Cause: wc.so is using the keyValue struct in ./mr/rpc.go. 
 
    Therefore, if you change anything in the mr/ directory, you will probably have to re-build any MapReduce plugins you use, with something like go build -buildmode=plugin ../mrapps/wc.go
-
-### Commands
-
-```
-rm mr-out-*
-go run mrmaster.go pg-*.txt
-go run mrworker.go wc.so
-```
-
-the result should match this
-```
-cat mr-out-* | sort | more
-```
-
-test script
-1. check the output
-2. check master and workers run in parrallel
-3. recovers from workers that crashed while running task
-4. expects to see output in files named mr-out-X, one for each reduce task. 
-```
-sh ./test-mr.sh
-```
 
 
 

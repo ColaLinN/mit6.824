@@ -10,9 +10,10 @@
   - [x] RequestTaskAPI
   - [x] UpdateTaskAPI
   - [x] Done Function
-- [ ] Implement the worker
-  - [ ] Initilisation
-  - [ ] MainStatus
-  - [ ] Integrate with RequestTaskAPI
-  - [ ] Integrate with UpdateTaskAPI
+- [x] Implement the worker
+  - [x] main process
+  - [x] Integrate with RequestTaskAPI
+  - [x] Integrate with UpdateTaskAPI
+  - [x] tempfile
+- [ ] Implement the basic function: mapReduce
 - [ ] Pass the testing cases

@@ -44,43 +44,54 @@ func (m *Master) checkTaskStatus(t *MasterTask) {
 func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	log.Println("[RequestTask API]")
 	log.Println(fmt.Sprint("args", args))
-	log.Println(fmt.Sprint("reply", reply))
+	defer func () {
+		log.Println(fmt.Sprintf("currently "))
+		log.Println(fmt.Sprint("reply", reply))
+	}()
 
-	for idx, mapTask := range m.mapTaskList.TaskList {
-		select {
-		case <-mapTask.WaitChan:
-			log.Println(fmt.Sprintf("dispatch %d map task to worker", idx))
-			mapTask.RunningChan <- struct{}{}
+	m.masterStatus.mu.Lock()
+	isMapTaskCompleted := len(m.mapTaskList.TaskList) == m.masterStatus.CompletedMapTaskNumber
+	isReduceCompleted := len(m.reduceTaskList.TaskList) == m.masterStatus.CompletedReduceTaskNumber
+	m.masterStatus.mu.Unlock()
 
-			reply.Task = WorkerTask{
-				TaskID:            mapTask.TaskID,
-				TaskType:          mapTask.TaskType,
-				AllocatedFileName: mapTask.AllocatedFileName,
+	if !isMapTaskCompleted {
+		for idx, mapTask := range m.mapTaskList.TaskList {
+			select {
+			case <-mapTask.WaitChan:
+				log.Println(fmt.Sprintf("dispatch %d map task to worker", idx))
+				mapTask.RunningChan <- struct{}{}
+
+				reply.Task = WorkerTask{
+					TaskID:            mapTask.TaskID,
+					TaskType:          mapTask.TaskType,
+					AllocatedFileName: mapTask.AllocatedFileName,
+				}
+				reply.NReduce = len(m.reduceTaskList.TaskList)
+				go m.checkTaskStatus(&mapTask)
+				return nil
+			case <-time.After(time.Millisecond):
 			}
-			reply.nReduce = len(m.reduceTaskList.TaskList)
+		}
+	} else if !isReduceCompleted {
+		for idx, reduceTask := range m.reduceTaskList.TaskList {
+			select {
+			case <-reduceTask.WaitChan:
+				log.Println(fmt.Sprintf("dispatch %d reduce task to worker", idx))
+				reduceTask.RunningChan <- struct{}{}
 
-			go m.checkTaskStatus(&mapTask)
-		case <-time.After(time.Millisecond):
+				reply.Task = WorkerTask{
+					TaskID:            reduceTask.TaskID,
+					TaskType:          reduceTask.TaskType,
+					AllocatedFileName: reduceTask.AllocatedFileName,
+				}
+				reply.NReduce = len(m.reduceTaskList.TaskList)
+
+				go m.checkTaskStatus(&reduceTask)
+				return nil
+			case <-time.After(time.Millisecond):
+			}
 		}
 	}
-	for idx, reduceTask := range m.reduceTaskList.TaskList {
-		select {
-		case <-reduceTask.WaitChan:
-			log.Println(fmt.Sprintf("dispatch %d reduce task to worker", idx))
-			reduceTask.RunningChan <- struct{}{}
-
-			reply.Task = WorkerTask{
-				TaskID:            reduceTask.TaskID,
-				TaskType:          reduceTask.TaskType,
-				AllocatedFileName: reduceTask.AllocatedFileName,
-			}
-			reply.nReduce = len(m.reduceTaskList.TaskList)
-
-			go m.checkTaskStatus(&reduceTask)
-		case <-time.After(time.Millisecond):
-		}
-	}
-	log.Println(fmt.Sprintf("currently "))
 	return nil
 }
 
@@ -91,7 +102,7 @@ func (m *Master) UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskS
 
 	TaskType := args.Task.TaskType
 	task := new(MasterTask)
-	if TaskType == TASK_TYPE_REDUCE {
+	if TaskType == TASK_TYPE_MAP {
 		task = &m.mapTaskList.TaskList[args.Task.TaskID]
 	} else {
 		task = &m.reduceTaskList.TaskList[args.Task.TaskID]
@@ -101,48 +112,55 @@ func (m *Master) UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskS
 	case TASK_STATUS_IN_PROGRESS:
 		select {
 		case <-task.WaitChan:
-			reply.msg = "heartbeat fail, task alr backed to wait status"
+			reply.Msg = "heartbeat fail, task alr backed to wait status"
 			task.WaitChan <- struct{}{}
 		case <-task.RunningChan:
-			reply.msg = "heartbeat successfully, task is running"
+			reply.Msg = "heartbeat successfully, task is running"
 			task.RunningChan <- struct{}{}
 		case <-task.CompleteChan:
-			reply.msg = "heartbeat fail, task already completed"
+			reply.Msg = "heartbeat fail, task already completed"
 			task.CompleteChan <- struct{}{}
 		case <-time.After(time.Second & time.Duration(2)):
-			reply.msg = "no available chan after 2 sec, nothing to do"
+			reply.Msg = "no available chan after 2 sec, nothing to do"
 		}
 	case TASK_STATUS_COMPLETE:
 		select {
 		case <-task.WaitChan:
-			reply.msg = "complete fail, task alr backed to wait status"
+			reply.Msg = "complete fail, task alr backed to wait status"
 			task.WaitChan <- struct{}{}
 		case <-task.RunningChan:
-			reply.msg = "complete successfully"
-			// TODO: dirty job, update file
+			reply.Msg = "complete successfully"
+			//TDOO: consider take over the renaming job
 			task.CompleteChan <- struct{}{}
+			m.masterStatus.mu.Lock()
+			if task.TaskType == TASK_TYPE_MAP {
+				m.masterStatus.CompletedMapTaskNumber++
+			} else {
+				m.masterStatus.CompletedReduceTaskNumber++
+			}
+			m.masterStatus.mu.Unlock()
 		case <-task.CompleteChan:
-			reply.msg = "task already completed by another task, will not proceed these ouput files"
+			reply.Msg = "task already completed by another task, will not proceed these ouput files"
 			task.CompleteChan <- struct{}{}
 		case <-time.After(time.Second & time.Duration(2)):
-			reply.msg = "no available chan after 2 sec, nothing to do"
+			reply.Msg = "no available chan after 2 sec, nothing to do"
 		}
 	case TASK_STATUS_FAIL:
 		select {
 		case <-task.WaitChan:
-			reply.msg = "late fail inform, task alr backed to wait status"
+			reply.Msg = "late fail inform, task alr backed to wait status"
 			task.WaitChan <- struct{}{}
 		case <-task.RunningChan:
-			reply.msg = "got that inform, rollback task status to wait"
+			reply.Msg = "got that inform, rollback task status to wait"
 			task.WaitChan <- struct{}{}
 		case <-task.CompleteChan:
-			reply.msg = "late fail inform, task already completed by another task"
+			reply.Msg = "late fail inform, task already completed by another task"
 			task.CompleteChan <- struct{}{}
 		case <-time.After(time.Second & time.Duration(2)):
-			reply.msg = "no available chan after 2 sec, nothing to do"
+			reply.Msg = "no available chan after 2 sec, nothing to do"
 		}
 	}
-	log.Println(reply.msg)
+	log.Println(reply.Msg)
 	return nil
 }
 
@@ -233,6 +251,9 @@ func MakeMaster(filenames []string, nReduce int) *Master {
 		newReduceTask.WaitChan <- struct{}{}
 		m.reduceTaskList.TaskList = append(m.reduceTaskList.TaskList, newReduceTask)
 	}
+
+	log.Println("length of map:", len(m.mapTaskList.TaskList))
+	log.Println("length of reduce", len(m.reduceTaskList.TaskList))
 
 	m.server()
 	return &m
