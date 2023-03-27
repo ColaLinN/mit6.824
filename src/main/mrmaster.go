@@ -20,7 +20,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: 10 is the number of reduce task here
 	m := mr.MakeMaster(os.Args[1:], 10)
 	for m.Done() == false {
 		time.Sleep(time.Second)

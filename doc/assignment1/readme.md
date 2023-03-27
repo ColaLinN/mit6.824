@@ -37,16 +37,19 @@ file under /src/main/
    2. read the task's input from one or more files, 
    3. execute the task, 
    4. and write the task's output to one or more files. 
-4. Fault detection: The master should notice if a worker hasn't completed its task in a reasonable amount of time (for this lab, use ten seconds), and give the same task to a different worker.
+4. Fault detection: The master should notice if a worker hasn't completed its task in a reasonable amount of time (for this lab, use **ten seconds**), and give the same task to a different worker.
 
 ### Extra Rules
 
 1. Divide intermediate keys
-- The map phase should divide the intermediate keys into buckets for nReduce reduce tasks
+
+   The map phase should divide the intermediate keys into buckets for nReduce reduce tasks
 2. X'th Reduce task -> `mr-out-X`. 
-- The worker implementation should put the output of the X'th reduce task in the file mr-out-X
+
+   The worker implementation should put the output of the X'th reduce task in the file mr-out-X
 3. `"%v %v"` output format for the return amount
-- A mr-out-X file should contain one line per Reduce function output.
+
+   A mr-out-X file should contain one line per Reduce function output.
 4. only modify these files: mr/worker.go, mr/master.go, and mr/rpc.go
 5. put intermediate Map output in files in the current directory
 6. implement Done() to exit
@@ -55,14 +58,22 @@ file under /src/main/
 ### Hints
 
 1. [key point] intermediate file name: `mr-X-Y`, X Map tasks, and Y Reduce tasks
-2. use encoding/json to encode the keyValue data
+
+2. Use encoding/json to encode the keyValue data
+
 3. [key point] use ihash(key) % NReduce to choose the reduce task id
-4. [key point] [atom read] master, as a server, will be concurrent, don't forget to lock shared data.
+
+4. **[key point] [atom read] master, as a server, will be concurrent, don't forget to lock shared data.**
+
 5. Use Go's race detector, with go build -race and go run -race. Can refer to ./test-mr.sh
+
 6. [key point] Workers will sometimes need to wait, e.g. reduces can't start until the last map has finished
+
 7. To test crash recovery, you can use the mrapps/crash.go application plugin.
+
 8. Master cannot distingusish between crashed worker and slowly alive wokrers. 
-- The best you can do is have the master wait for some amount of time, and then give up and re-issue the task to a different worker.
+
+   The best you can do is have the master wait for some amount of time, and then give up and re-issue the task to a different worker.
 8. use ioutil.TempFile to create a temporary file and os.Rename to atomically rename it once it is completely written.
 9. the outputs of test-mr.sh are in sub-directory `mr-tmp`
 
@@ -81,14 +92,16 @@ CHANGE: You should put your implementation in
 
 1. network error:
 
-- 2023/03/23 03:04:52 dialing:dial unix /var/tmp/824-mr-501: connect: connection refused
-  exit status 1
+   2023/03/23 03:04:52 dialing:dial unix /var/tmp/824-mr-501: connect: connection refused
+   exit status 1
 
 2. go plugin error
 
-- 2023/03/23 03:04:37 cannot load plugin wc.so
-- Root Cause: wc.so is using the keyValue struct in ./mr/rpc.go. 
-- Therefore, if you change anything in the mr/ directory, you will probably have to re-build any MapReduce plugins you use, with something like go build -buildmode=plugin ../mrapps/wc.go
+   2023/03/23 03:04:37 cannot load plugin wc.so
+
+   Root Cause: wc.so is using the keyValue struct in ./mr/rpc.go. 
+
+   Therefore, if you change anything in the mr/ directory, you will probably have to re-build any MapReduce plugins you use, with something like go build -buildmode=plugin ../mrapps/wc.go
 
 ### Commands
 
@@ -116,11 +129,16 @@ sh ./test-mr.sh
 
 # file name convention
 
-intermediate files will be: mr-X-Y
+**Intermediate files will be: **
 
-X is the number of Map tasks, Y is the number of Reduce tasks.
+- **mr-X-Y**
+- **mr-out-Y**
 
-Let's say 2 map tasks, and 4 reduce tasks
+**Here, X is the number of Map tasks, Y is the number of Reduce tasks.**
+
+
+
+For example, let's say there are 2 map tasks and 4 reduce tasks
 
 
 
@@ -157,3 +175,5 @@ For reduce taks 1, worker will read the following file
 2. mr-1-1
 
 ouput is `mr-out-1`.
+
+- [ ] 
