@@ -5,8 +5,9 @@
 Commands
 
 ```
-export GO111MODULE="off"
 cd ~/6.824
+
+export GO111MODULE="off"
 cd src/main
 go build -buildmode=plugin ../mrapps/wc.go
 rm mr-out*
@@ -23,9 +24,12 @@ run task
 ```
 rm mr-out-*
 go run mrmaster.go pg-*.txt
-go run mrworker.go wc.so
+
+
 
 go build -buildmode=plugin ../mrapps/wc.go && go run mrmaster.go pg-*.txt
+
+go run mrworker.go wc.so
 ```
 
 the result should match this

@@ -2,6 +2,7 @@ package mr
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"io/ioutil"
@@ -53,7 +54,11 @@ func Worker(
 	}
 
 	for {
-		taskReply := w.CallRequestTask()
+		taskReply, err := w.CallRequestTask()
+		if err != nil {
+			log.Println(err.Error())
+			return
+		}
 		task := &taskReply.Task
 		allocatedFilenames := task.AllocatedFileName
 
@@ -61,24 +66,37 @@ func Worker(
 		case TASK_TYPE_MAP:
 			outputFilenames, err := w.Map(allocatedFilenames, task.TaskID, taskReply.NReduce)
 			if err != nil {
-				// TODO: we can retry here, or report the fail to master. But we decide to return directly because master can hanle it.
-				return
-				// updateReply := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
+				updateReply, err := w.CallUpdateTaskStatus(task, TASK_STATUS_FAIL, nil)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+				log.Println(updateReply)
+			} else {
+				updateReply, err := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+				log.Println(updateReply)
 			}
-			updateReply := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
-			// TODO: act based on the reply
-			log.Println(updateReply)
-			return
 		case TASK_TYPE_REDUCE:
 			outputFilenames, err := w.Reduce(allocatedFilenames, task.TaskID)
 			if err != nil {
-				// TODO: we can retry here, or report the fail to master. But we decide to return directly because master can hanle it.
-				return
-				// updateReply := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
+				updateReply, err := w.CallUpdateTaskStatus(task, TASK_STATUS_FAIL, nil)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+				log.Println(updateReply)
+			} else {
+				updateReply, err := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
+				if err != nil {
+					log.Println(err.Error())
+					return
+				}
+				log.Println(updateReply)
 			}
-			updateReply := w.CallUpdateTaskStatus(task, TASK_STATUS_COMPLETE, outputFilenames)
-			log.Println(updateReply)
-			return
 		case TASK_TYPE_EXIT:
 			return
 		case TASK_TYPE_WAIT:
@@ -88,19 +106,21 @@ func Worker(
 	}
 }
 
-func (w *WorkerImpl) CallRequestTask() *RequestTaskReply {
+func (w *WorkerImpl) CallRequestTask() (*RequestTaskReply, error) {
 	args := RequestTaskArgs{}
 	reply := RequestTaskReply{}
 
-	call("Master.RequestTask", &args, &reply)
+	if ok := call("Master.RequestTask", &args, &reply); !ok {
+		return nil, errors.New("request fail")
+	}
 
 	log.Println("TaskType", TaskType_NameMap[reply.Task.TaskType])
 	log.Println("TaskID", reply.Task.TaskID)
-	return &reply
+	return &reply, nil
 }
 
 // TODO: heartbeat
-func (w *WorkerImpl) CallUpdateTaskStatus(task *WorkerTask, status TaskStatus, ouputFilenames []string) *UpdateTaskStatusReply {
+func (w *WorkerImpl) CallUpdateTaskStatus(task *WorkerTask, status TaskStatus, ouputFilenames []string) (*UpdateTaskStatusReply, error) {
 	args := UpdateTaskStatusArgs{
 		Task:               *task,
 		TaskStatus:         status,
@@ -110,9 +130,11 @@ func (w *WorkerImpl) CallUpdateTaskStatus(task *WorkerTask, status TaskStatus, o
 
 	log.Println("TaskStatus", TaskStatus_NameMap[args.TaskStatus])
 
-	call("Master.UpdateTaskStatus", &args, &reply)
+	if ok := call("Master.UpdateTaskStatus", &args, &reply); !ok {
+		return nil, errors.New("request fail")
+	}
 
-	return &reply
+	return &reply, nil
 }
 
 func (w *WorkerImpl) Map(filenames []string, mapID int, nReduce int) ([]string, error) {

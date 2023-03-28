@@ -44,7 +44,7 @@ func (m *Master) checkTaskStatus(t *MasterTask) {
 func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) error {
 	log.Println("[RequestTask API]")
 	log.Println(fmt.Sprint("args", args))
-	defer func () {
+	defer func() {
 		log.Println(fmt.Sprintf("currently "))
 		log.Println(fmt.Sprint("reply", reply))
 	}()
@@ -72,7 +72,12 @@ func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) err
 			case <-time.After(time.Millisecond):
 			}
 		}
-	} else if !isReduceCompleted {
+		reply.Task = WorkerTask{
+			TaskType: TASK_TYPE_WAIT,
+		}
+		return nil
+	}
+	if !isReduceCompleted {
 		for idx, reduceTask := range m.reduceTaskList.TaskList {
 			select {
 			case <-reduceTask.WaitChan:
@@ -91,6 +96,9 @@ func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) err
 			case <-time.After(time.Millisecond):
 			}
 		}
+	}
+	reply.Task = WorkerTask{
+		TaskType: TASK_TYPE_EXIT,
 	}
 	return nil
 }
@@ -138,6 +146,11 @@ func (m *Master) UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskS
 			} else {
 				m.masterStatus.CompletedReduceTaskNumber++
 			}
+			
+			if m.masterStatus.CompletedMapTaskNumber == len(m.mapTaskList.TaskList) &&
+				m.masterStatus.CompletedReduceTaskNumber == len(m.reduceTaskList.TaskList) {
+				m.masterStatus.TaskStatus = TASK_STATUS_COMPLETE
+			}
 			m.masterStatus.mu.Unlock()
 		case <-task.CompleteChan:
 			reply.Msg = "task already completed by another task, will not proceed these ouput files"
@@ -151,7 +164,7 @@ func (m *Master) UpdateTaskStatus(args *UpdateTaskStatusArgs, reply *UpdateTaskS
 			reply.Msg = "late fail inform, task alr backed to wait status"
 			task.WaitChan <- struct{}{}
 		case <-task.RunningChan:
-			reply.Msg = "got that inform, rollback task status to wait"
+			reply.Msg = "got that failure inform, rollback task status to wait"
 			task.WaitChan <- struct{}{}
 		case <-task.CompleteChan:
 			reply.Msg = "late fail inform, task already completed by another task"
