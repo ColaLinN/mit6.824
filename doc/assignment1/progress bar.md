@@ -16,9 +16,10 @@
   - [x] Integrate with UpdateTaskAPI
   - [x] tempfile
 - [x] Implement the basic function: mapReduce, i.e. can ouput expected result
-- [x] Pass the testing cases/edge cases
+- [x] Pass the tests/edge cases
   - [x] Worker should request task repeatly
   - [x] fault tolerance
   - [x] ...
+- [x] write a brief desgin introduction
 
 ![image-20230328164812880](/Users/fenglyulin/Library/Application Support/typora-user-images/image-20230328164812880.png)
