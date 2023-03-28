@@ -58,7 +58,7 @@ func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) err
 		for idx, mapTask := range m.mapTaskList.TaskList {
 			select {
 			case <-mapTask.WaitChan:
-				log.Println(fmt.Sprintf("dispatch %d map task to worker", idx))
+				log.Println(fmt.Sprintf("dispatch map task %d to worker", idx))
 				mapTask.RunningChan <- struct{}{}
 
 				reply.Task = WorkerTask{
@@ -76,7 +76,7 @@ func (m *Master) RequestTask(args *RequestTaskArgs, reply *RequestTaskReply) err
 		for idx, reduceTask := range m.reduceTaskList.TaskList {
 			select {
 			case <-reduceTask.WaitChan:
-				log.Println(fmt.Sprintf("dispatch %d reduce task to worker", idx))
+				log.Println(fmt.Sprintf("dispatch reduce task %d to worker", idx))
 				reduceTask.RunningChan <- struct{}{}
 
 				reply.Task = WorkerTask{
@@ -236,7 +236,7 @@ func MakeMaster(filenames []string, nReduce int) *Master {
 		for x := 0; x < len(filenames); x++ {
 			reduceTaskFilenames = append(
 				reduceTaskFilenames,
-				GetMasterTaskOuputFilenames(TASK_TYPE_REDUCE, x, idx),
+				GetMasterTaskOuputFilenames(TASK_TYPE_MAP, x, idx),
 			)
 		}
 
@@ -253,7 +253,9 @@ func MakeMaster(filenames []string, nReduce int) *Master {
 	}
 
 	log.Println("length of map:", len(m.mapTaskList.TaskList))
+	log.Println("mapTaskList", m.mapTaskList)
 	log.Println("length of reduce", len(m.reduceTaskList.TaskList))
+	log.Println("reduceTaskList", m.reduceTaskList)
 
 	m.server()
 	return &m

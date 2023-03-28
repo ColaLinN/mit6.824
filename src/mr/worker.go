@@ -94,7 +94,8 @@ func (w *WorkerImpl) CallRequestTask() *RequestTaskReply {
 
 	call("Master.RequestTask", &args, &reply)
 
-	log.Println(reply)
+	log.Println("TaskType", TaskType_NameMap[reply.Task.TaskType])
+	log.Println("TaskID", reply.Task.TaskID)
 	return &reply
 }
 
@@ -107,9 +108,10 @@ func (w *WorkerImpl) CallUpdateTaskStatus(task *WorkerTask, status TaskStatus, o
 	}
 	reply := UpdateTaskStatusReply{}
 
-	call("Master.RequestTask", &args, &reply)
+	log.Println("TaskStatus", TaskStatus_NameMap[args.TaskStatus])
 
-	log.Println(reply)
+	call("Master.UpdateTaskStatus", &args, &reply)
+
 	return &reply
 }
 
@@ -249,11 +251,13 @@ func call(rpcname string, args interface{}, reply interface{}) bool {
 	}
 	defer c.Close()
 
+	log.Println("call API", rpcname, "args", args)
 	err = c.Call(rpcname, args, reply)
-	if err == nil {
-		return true
+	if err != nil {
+		fmt.Println(err)
+		return false
 	}
 
-	fmt.Println(err)
-	return false
+	log.Println("call API", rpcname, "reply", reply)
+	return true
 }

@@ -25,6 +25,13 @@ const (
 	TASK_TYPE_WAIT // used to inform worker only, let worker be idle for a while
 )
 
+var TaskType_NameMap = map[TaskType]string{
+	TASK_TYPE_EXIT:   "EXIT",
+	TASK_TYPE_MAP:    "MAP",
+	TASK_TYPE_REDUCE: "REDUCE",
+	TASK_TYPE_WAIT:   "WAIT",
+}
+
 type TaskStatus int
 
 const (
@@ -32,6 +39,12 @@ const (
 	TASK_STATUS_COMPLETE
 	TASK_STATUS_FAIL
 )
+
+var TaskStatus_NameMap = map[TaskStatus]string{
+	TASK_STATUS_IN_PROGRESS: "IN_PROGRESS",
+	TASK_STATUS_COMPLETE:    "COMPLETE",
+	TASK_STATUS_FAIL:        "FAIL",
+}
 
 // Map functions return a slice of KeyValue.
 type KeyValue struct {

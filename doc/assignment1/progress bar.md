@@ -15,5 +15,6 @@
   - [x] Integrate with RequestTaskAPI
   - [x] Integrate with UpdateTaskAPI
   - [x] tempfile
-- [ ] Implement the basic function: mapReduce
+- [x] Implement the basic function: mapReduce, i.e. can ouput expected result
 - [ ] Pass the testing cases
+  - [ ] fault tolerance
