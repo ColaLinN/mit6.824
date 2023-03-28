@@ -35,7 +35,7 @@ func main() {
 	// pass it to Map,
 	// accumulate the intermediate Map output.
 	//
-	intermediate := []mr.KeyValue{}
+	intermediateKVArray := []mr.KeyValue{}
 	for _, filename := range os.Args[2:] {
 		file, err := os.Open(filename)
 		if err != nil {
@@ -46,44 +46,46 @@ func main() {
 			log.Fatalf("cannot read %v", filename)
 		}
 		file.Close()
-		kva := mapf(filename, string(content))
-		intermediate = append(intermediate, kva...)
+		keyValueArray := mapf(filename, string(content))
+		intermediateKVArray = append(intermediateKVArray, keyValueArray...)
 	}
 
+	// TODO
 	//
 	// a big difference from real MapReduce is that all the
 	// intermediate data is in one place, intermediate[],
 	// rather than being partitioned into NxM buckets.
 	//
 
-	sort.Sort(ByKey(intermediate))
+	sort.Sort(ByKey(intermediateKVArray))
 
-	oname := "mr-out-0"
-	ofile, _ := os.Create(oname)
+	outputFileName := "mr-out-0"
+	outputFile, _ := os.Create(outputFileName)
 
 	//
 	// call Reduce on each distinct key in intermediate[],
 	// and print the result to mr-out-0.
 	//
 	i := 0
-	for i < len(intermediate) {
+	for i < len(intermediateKVArray) {
 		j := i + 1
-		for j < len(intermediate) && intermediate[j].Key == intermediate[i].Key {
+		for j < len(intermediateKVArray) && intermediateKVArray[j].Key == intermediateKVArray[i].Key {
 			j++
 		}
+		
 		values := []string{}
 		for k := i; k < j; k++ {
-			values = append(values, intermediate[k].Value)
+			values = append(values, intermediateKVArray[k].Value)
 		}
-		output := reducef(intermediate[i].Key, values)
+		output := reducef(intermediateKVArray[i].Key, values)
 
-		// this is the correct format for each line of Reduce output.
-		fmt.Fprintf(ofile, "%v %v\n", intermediate[i].Key, output)
+		// TODO this is the correct format for each line of Reduce output.
+		fmt.Fprintf(outputFile, "%v %v\n", intermediateKVArray[i].Key, output)
 
 		i = j
 	}
 
-	ofile.Close()
+	outputFile.Close()
 }
 
 //
@@ -95,11 +97,13 @@ func loadPlugin(filename string) (func(string, string) []mr.KeyValue, func(strin
 	if err != nil {
 		log.Fatalf("cannot load plugin %v", filename)
 	}
+
 	xmapf, err := p.Lookup("Map")
 	if err != nil {
 		log.Fatalf("cannot find Map in %v", filename)
 	}
 	mapf := xmapf.(func(string, string) []mr.KeyValue)
+
 	xreducef, err := p.Lookup("Reduce")
 	if err != nil {
 		log.Fatalf("cannot find Reduce in %v", filename)
