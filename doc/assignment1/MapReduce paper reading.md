@@ -5,7 +5,3 @@
 When a reduce worker has read all intermediate data, it sorts it by the
 
 The sorting is needed because typically many different keys map to the same reduce task
-
-
-
-![image-20230323043842189](/Users/fenglyulin/Library/Application Support/typora-user-images/image-20230323043842189.png)
