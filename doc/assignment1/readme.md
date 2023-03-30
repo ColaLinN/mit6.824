@@ -1,23 +1,17 @@
 # mit6.824
 
-# assignment 1
+**[assignment 1](http://nil.csail.mit.edu/6.824/2020/labs/lab-mr.html)**
 
-Commands
+some commands
 
 ```
 cd ~/6.824
-
-export GO111MODULE="off"
 cd src/main
+export GO111MODULE="off"
 go build -buildmode=plugin ../mrapps/wc.go
 rm mr-out*
 go run mrsequential.go wc.so pg*.txt
 more mr-out-0
-A 509
-ABOUT 2
-ACT 8
-...
-
 ```
 run task
 
