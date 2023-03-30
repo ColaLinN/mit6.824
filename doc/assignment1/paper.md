@@ -2,7 +2,7 @@
 
 # MapReduce reading note
 
-[MapReduce Paper](http://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf)
+[MapReduce Paper(2004)](http://static.googleusercontent.com/media/research.google.com/en//archive/mapreduce-osdi04.pdf)
 
 ## Intro
 
@@ -16,7 +16,7 @@ As a reaction to this complexity, we designed a new abstraction that allows us t
 
 MapReduce is a programming model and an associated implementation for processing and generating large data sets. **Users specify a map function** that processes a key/value pair to generate a set of intermediate key/value pairs, **and a reduce function** that merges all intermediate values associated with the same intermediate key. Many real-world tasks are expressible in this model, as shown in the paper.
 
-![image-20230331004457085](/Users/fenglyulin/Library/Application Support/typora-user-images/image-20230331004457085.png)
+![image-20230331010833103](./paper.assets/image-20230331010833103.png)
 
 **Map**: a function that processes a key/value pair to generate a set of intermediate key/value pairs.
 

@@ -4,7 +4,7 @@
 
 #### Progress Bar
 
-**Course** 
+**Lectures** 
 
 - [x] C1 MapReduce
   - [x] Video
